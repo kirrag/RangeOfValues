@@ -1,9 +1,16 @@
 package ru.netology;
 
 import java.util.Random;
-import java.lang.Runnable;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.FutureTask;
+
+import com.sun.jdi.request.WatchpointRequest;
 
 public class Main {
 
@@ -16,32 +23,37 @@ public class Main {
 		return text.toString();
 	}
 
-	public static void main(String[] args) throws InterruptedException {
+	public static void main(String[] args) throws ExecutionException, InterruptedException {
 		String[] texts = new String[25];
 		for (int i = 0; i < texts.length; i++) {
 			texts[i] = generateText("aab", 30_000);
 		}
 
-		List<Thread> threads = new ArrayList<>();
+		final ExecutorService threadPool = Executors.newFixedThreadPool(texts.length);
+
+		final List<Future<Integer>> tasks = new ArrayList<>();
+
+		int max = 0;
+
 
 		long startTs = System.currentTimeMillis(); // start time
-
-		for (String text : texts) {
-			Runnable maxCharSequence = new MaxCharSequence(text);
-			threads.add(new Thread(maxCharSequence));
+		
+		for (String text: texts) {
+			final Callable<Integer> maxCharSequence = new MaxCharSequence(text);
+			tasks.add(threadPool.submit(maxCharSequence));
 		}
 
-		threads.forEach(thread -> thread.start());
-		threads.forEach(thread -> {
-			try {
-				thread.join();
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-		});
+		for (Future<Integer> task: tasks) {
+			final int resultOfTask = task.get();
+			if (resultOfTask > max ) max = resultOfTask;
+		}
+
+		System.out.println("Максимальный интервал значений: " + max);
 
 		long endTs = System.currentTimeMillis(); // end time
 
 		System.out.println("Time: " + (endTs - startTs) + "ms");
+
+		threadPool.shutdown();
 	}
 }

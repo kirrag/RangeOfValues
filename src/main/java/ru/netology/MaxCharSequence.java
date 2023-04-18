@@ -1,16 +1,16 @@
 package ru.netology;
 
-public class MaxCharSequence implements Runnable {
-	//private Thread thread;
+import java.util.concurrent.Callable;
+
+public class MaxCharSequence implements Callable {
 	private String text;
 
 	MaxCharSequence(String text) {
-		//thread = new Thread();
 		this.text = text;
 	}
 
 	@Override
-	public void run() {
+	public Integer call() {
 		int maxSize = 0;
 		for (int i = 0; i < text.length(); i++) {
 			for (int j = 0; j < text.length(); j++) {
@@ -29,6 +29,6 @@ public class MaxCharSequence implements Runnable {
 				}
 			}
 		}
-		System.out.println(text.substring(0, 100) + " -> " + maxSize);
+		return maxSize;
 	}
 }
